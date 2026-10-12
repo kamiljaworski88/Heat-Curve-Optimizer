@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Heat Curve Optimizer",
+        "description": "Wybierz czujniki dla podłogówki i grzejników.",
+        "data": {
+          "name": "Nazwa",
+          "outdoor_temperature": "Temperatura zewnętrzna",
+          "floor_heating_temperatures": "Czujniki pomieszczeń z podłogówką",
+          "radiator_temperatures": "Czujniki pomieszczeń z grzejnikami",
+          "target_temperature": "Temperatura docelowa",
+          "supply_temperature": "Temperatura zasilania (opcjonalnie)",
+          "return_temperature": "Temperatura powrotu (opcjonalnie)",
+          "power": "Moc (opcjonalnie)",
+          "operation_state": "Stan ogrzewania (opcjonalnie)",
+          "heating_states": "Wartości stanu ogrzewania",
+          "sample_interval_minutes": "Interwał próbkowania (min)",
+          "analysis_hours": "Okno analizy (godz.)"
+        }
+      }
+    },
+    "error": {
+      "no_heating_zone": "Wybierz przynajmniej jeden czujnik podłogówki lub grzejników."
+    }
+  }
+}
