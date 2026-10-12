@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Heat Curve Optimizer",
+        "description": "Select sensors for floor and radiator zones.",
+        "data": {
+          "name": "Name",
+          "outdoor_temperature": "Outdoor temperature",
+          "floor_heating_temperatures": "Floor-heating room sensors",
+          "radiator_temperatures": "Radiator room sensors",
+          "target_temperature": "Target temperature",
+          "supply_temperature": "Supply temperature (optional)",
+          "return_temperature": "Return temperature (optional)",
+          "power": "Power sensor (optional)",
+          "operation_state": "Heating state (optional)",
+          "heating_states": "Heating state values",
+          "sample_interval_minutes": "Sample interval (minutes)",
+          "analysis_hours": "Analysis window (hours)"
+        }
+      }
+    },
+    "error": {
+      "no_heating_zone": "Select at least one floor or radiator sensor."
+    }
+  }
+}
