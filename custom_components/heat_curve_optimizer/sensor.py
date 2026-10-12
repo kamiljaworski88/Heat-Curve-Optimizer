@@ -14,6 +14,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         HcoSensor(coordinator, entry, "temperature_error", "Temperature error", UnitOfTemperature.CELSIUS),
         HcoSensor(coordinator, entry, "confidence", "Confidence", "%"),
         HcoSensor(coordinator, entry, "data_coverage", "Data coverage", "%"),
+        HcoSensor(coordinator, entry, "data_quality", "Data quality"),
+        HcoSensor(coordinator, entry, "diagnostic_reason", "Diagnostic reason"),
     ])
 
 class HcoSensor(SensorEntity):
@@ -48,6 +50,11 @@ class HcoSensor(SensorEntity):
         if self.key == "data_coverage":
             v = r.get("coverage")
             return round(v * 100) if v is not None else None
+        if self.key == "data_quality":
+            return r.get("data_quality", "unknown")
+        if self.key == "diagnostic_reason":
+            issues = r.get("issues") or []
+            return issues[0] if issues else r.get("reason", "OK")
 
     @property
     def extra_state_attributes(self):
