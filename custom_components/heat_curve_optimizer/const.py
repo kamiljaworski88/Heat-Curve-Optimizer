@@ -23,6 +23,7 @@ DEADBAND = 0.3
 SMALL_ERROR = 0.8
 MAX_ADJUSTMENT = 2.0
 STORAGE_VERSION = 1
+STORAGE_SCHEMA_VERSION = 2
 
 # Broad physical sanity limits. Values outside them are rejected, never clamped.
 MIN_TEMP_C = -60.0
