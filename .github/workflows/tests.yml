@@ -1,0 +1,16 @@
+name: Tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest pyyaml
+      - run: python -m compileall -q custom_components tests
+      - run: python -m pytest -q tests
+      - run: python -c "import json,pathlib; x=json.loads(pathlib.Path('custom_components/heat_curve_optimizer/manifest.json').read_text()); assert x['domain']=='heat_curve_optimizer'"
