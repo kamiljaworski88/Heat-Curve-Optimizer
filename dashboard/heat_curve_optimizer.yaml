@@ -9,73 +9,120 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Rekomendacja
+            heading: Sterowanie i rekomendacja
             icon: mdi:chart-bell-curve
           - type: tile
-            entity: switch.heat_curve_optimizer_data_collection
+            entity: switch.data_collection
             name: Zbieranie danych
             icon: mdi:database-clock
           - type: tile
-            entity: sensor.heat_curve_optimizer_recommendation
-            name: Zalecenie
+            entity: sensor.recommendation
+            name: Rekomendacja
           - type: markdown
             content: >-
-              {% set s = 'sensor.heat_curve_optimizer_recommendation' %}
-              {% set collection = 'switch.heat_curve_optimizer_data_collection' %}
-              {% if is_state(collection, 'off') %}
+              {% set sw = states('switch.data_collection') %}
+              {% set r = states('sensor.recommendation') %}
+              {% if sw == 'off' %}
               ## ⏸ Zbieranie danych wstrzymane
-              Ogrzewanie jest wyłączone lub analiza została ręcznie wstrzymana.
-              Próbki nie są zapisywane i pokrycie danych nie rośnie.
 
-              Włącz **Zbieranie danych** dopiero po uruchomieniu ogrzewania.
+              Nowe próbki nie są zapisywane. Włącz przełącznik dopiero,
+              gdy ogrzewanie CO rzeczywiście pracuje.
+              {% elif sw in ['unknown', 'unavailable'] %}
+              ## ⚠️ Sprawdź encję przełącznika
+
+              Sprawdź identyfikator w Narzędzia deweloperskie → Stany.
+              {% elif r == 'insufficient_data' %}
+              ## ⏳ Zbieranie danych
+
+              Pokrycie: **{{ states('sensor.data_coverage') }}%**.
+              Do bezpiecznej rekomendacji wymagane jest co najmniej 70%.
+              {% elif r == 'zone_conflict' %}
+              ## ⚠️ Konflikt stref
+
+              Podłogówka i grzejniki mają odmienne potrzeby.
+              Nie zmieniaj nastaw bez sprawdzenia termostatów.
+              {% elif r in ['raise', 'lower', 'no_change'] %}
+              ## {{ {'raise':'⬆️ Podnieś temperaturę',
+                      'lower':'⬇️ Obniż temperaturę',
+                      'no_change':'✅ Bez zmian'}[r] }}
+
+              Wstępna korekta: **{{ state_attr('sensor.recommendation',
+              'recommended_adjustment_c') }} °C**. To sugestia przesunięcia,
+              nie nachylenia krzywej.
               {% else %}
-              **Stan:** {{ states(s) }}
+              ## ⚠️ Brak bezpiecznej rekomendacji
 
-              **Uzasadnienie:** {{ state_attr(s, 'reason') or 'Brak danych' }}
-
-              {% if states(s) in ['raise','lower','no_change'] %}
-              Wstępna korekta: {{ state_attr(s,'recommended_adjustment_c') }} °C.
-              {% else %}
-              ⚠️ Rekomendacja wstrzymana. Nie zmieniaj nastaw.
+              Stan: **{{ r }}**. Sprawdź diagnostykę.
               {% endif %}
-              {% endif %}
-          - type: entities
-            title: Diagnostyka
-            entities:
-              - sensor.heat_curve_optimizer_data_quality
-              - sensor.heat_curve_optimizer_diagnostic_reason
-              - sensor.heat_curve_optimizer_data_coverage
-              - sensor.heat_curve_optimizer_confidence
+          - type: gauge
+            entity: sensor.confidence
+            name: Pewność rekomendacji
+            min: 0
+            max: 100
+          - type: gauge
+            entity: sensor.data_coverage
+            name: Pokrycie danych
+            min: 0
+            max: 100
       - type: grid
         cards:
           - type: heading
-            heading: Pomieszczenia i strefy
+            heading: Strefy i diagnostyka
+            icon: mdi:home-thermometer-outline
+          - type: entities
+            title: Jakość danych
+            entities:
+              - entity: sensor.data_quality
+                name: Jakość
+              - entity: sensor.diagnostic_reason
+                name: Powód
+              - entity: sensor.temperature_error
+                name: Odchylenie temperatury
           - type: markdown
             content: >-
-              {% set z = state_attr('sensor.heat_curve_optimizer_recommendation','zones') or {} %}
-              **Podłogówka:** {{ (z.get('floor') or {}).get('average','—') }} °C
+              {% set z = state_attr('sensor.recommendation','zones') or {} %}
+              {% set f = z.get('floor') or {} %}
+              {% set r = z.get('radiator') or {} %}
+              ### Podłogówka
 
-              **Grzejniki:** {{ (z.get('radiator') or {}).get('average','—') }} °C
+              {% if f %}Średnia: **{{ f.get('average') }} °C**;
+              odchylenie: **{{ f.get('error') }} °C**.
+              {% else %}Dane strefy będą dostępne po analizie.{% endif %}
 
-              Własne czujniki pokojowe dodaj do poniższych kart.
-          - type: entities
-            title: Podłogówka — Aqara / Supla
-            entities: []
-          - type: entities
-            title: Grzejniki — Aqara / Supla
-            entities: []
+              ### Grzejniki
+
+              {% if r %}Średnia: **{{ r.get('average') }} °C**;
+              odchylenie: **{{ r.get('error') }} °C**.
+              {% else %}Dane strefy będą dostępne po analizie.{% endif %}
+
+              Czujniki poszczególnych pomieszczeń można dodać jako
+              osobne karty w edytorze dashboardu.
+          - type: markdown
+            content: >-
+              {% if is_state('switch.data_collection','off') %}
+              **Tryb:** pauza. Zebrana wcześniej historia pozostaje zapisana.
+              {% elif is_state('sensor.data_quality','ok') %}
+              **Czujniki:** ostatnia próbka przeszła walidację.
+              {% else %}
+              **Uwaga:** sprawdź stan czujników i diagnostykę.
+              {% endif %}
       - type: grid
         cards:
           - type: heading
-            heading: Trendy i jakość danych
+            heading: Historia i trendy
+            icon: mdi:chart-line
           - type: history-graph
             title: Odchylenie temperatury — 24 h
             hours_to_show: 24
             entities:
-              - sensor.heat_curve_optimizer_temperature_error
+              - entity: sensor.temperature_error
           - type: history-graph
-            title: Pokrycie i pewność danych — 24 h
+            title: Pokrycie danych — 24 h
             hours_to_show: 24
             entities:
-              - sensor.heat_curve_optimizer_data_coverage
-              - sensor.heat_curve_optimizer_confidence
+              - entity: sensor.data_coverage
+          - type: history-graph
+            title: Pewność rekomendacji — 24 h
+            hours_to_show: 24
+            entities:
+              - entity: sensor.confidence
