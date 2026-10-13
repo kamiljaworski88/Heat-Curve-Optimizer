@@ -74,8 +74,9 @@ def test_restart_discards_old_samples(monkeypatch):
     }, _states())
     coordinator = klass(hass, entry)
     asyncio.run(coordinator.async_initialize())
-    assert len(coordinator.samples) == 1
-    assert coordinator.result["status"] == "insufficient_data"
+    assert len(coordinator.samples) == 0
+    assert coordinator.result["status"] == "paused"
+    assert not coordinator.collection_enabled
     asyncio.run(coordinator.async_shutdown())
     assert hass.cancelled
 
@@ -84,6 +85,7 @@ def test_disconnect_blocks_recommendation_and_recovery(monkeypatch):
     klass, hass, entry = _coordinator_class(monkeypatch, None, values)
     coordinator = klass(hass, entry)
     asyncio.run(coordinator.async_initialize())
+    asyncio.run(coordinator.async_set_collection_enabled(True))
     values["sensor.supla"] = "unavailable"
     asyncio.run(coordinator.async_collect())
     assert coordinator.result["status"] == "invalid_data"
