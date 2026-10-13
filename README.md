@@ -1,19 +1,35 @@
 # Heat Curve Optimizer
 
-Home Assistant custom integration (experimental, read-only). Select outdoor, target, floor-heating and radiator temperature sensors via UI. It collects samples, persists history and exposes recommendation, coverage, confidence, data-quality and diagnostic sensors.
+Experimental, **read-only** Home Assistant custom integration for conservative heating-curve recommendations. It separates underfloor heating from radiators and avoids recommendations when zones disagree or sensor data is invalid.
 
-## Install via HACS
+## Installation through HACS
 
-HACS → Custom repositories → `https://github.com/kamiljaworski88/Heat-Curve-Optimizer` → Integration. Install, restart Home Assistant, then Settings → Devices & services → Add integration → Heat Curve Optimizer.
+1. Back up Home Assistant.
+2. Open HACS → Custom repositories.
+3. Add `https://github.com/kamiljaworski88/Heat-Curve-Optimizer` as **Integration**.
+4. Install the integration, restart Home Assistant and go to Settings → Devices & services → Add integration → Heat Curve Optimizer.
+5. Select outdoor and target temperature entities and at least one floor or radiator room temperature entity.
+6. Allow a full analysis window to accumulate before acting on advice.
 
-## Important safety limitations
+**Polska instrukcja:** [docs/INSTRUKCJA_PL.md](docs/INSTRUKCJA_PL.md)
 
-**Experimental. Do not use recommendations as automatic heating control.** Current algorithm is heuristic, not a calibrated heating-curve slope model. Thermostatic valves, floor-loop actuators, room occupancy, weather changes, cooling by air conditioners and lack of heating-demand signals can make recommendations misleading. Check pump operation and hydraulic settings with your installer. No commands are sent to the heat pump.
+**Dashboard:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml) (Lovelace Sections template; adjust generated entity IDs and room sensors).
 
-## Privacy
+**Beta candidate notes:** [docs/RELEASE_NOTES_0.1.0-beta.md](docs/RELEASE_NOTES_0.1.0-beta.md). This document is not a published GitHub release.
 
-No credentials, tokens, addresses or actual household entity IDs are committed. Selected entity IDs and sampled temperatures are stored only in Home Assistant local storage; do not publish your `.storage` files or diagnostic exports without review.
+## Tests
 
-## Development
+The workflow in `.github/workflows/tests.yml` runs `python -m pytest -q tests`, Python compilation and a manifest check. Tests use mock Aqara/Supla states and fake Home Assistant services, not physical devices or a full Home Assistant runtime. Check the actual Actions run result before installing the beta.
 
-Run `pytest` with Home Assistant test dependencies available. Aqara/Supla simulations use mock states, not actual devices. A Home Assistant integration test and dashboard are still required before stable release.
+## Safety and privacy
+
+No automatic heat-pump control. The current heuristic suggests a preliminary **offset**, not a calibrated slope. Thermostats, floor actuators, air conditioning, occupancy and pump heating mode are not modeled sufficiently for automatic decisions.
+
+Never commit secrets, tokens, real household entity IDs or `.storage` files. Samples are stored locally in Home Assistant. Inspect diagnostics before sharing.
+
+## Known limitations
+
+- Optional supply/return, power and operation-state entities are selectable but not yet used for recommendations.
+- Sensor update age is not yet checked; frozen but numeric states may be misleading.
+- Room-specific targets and AC/thermostat demand signals are not modeled.
+- HACS installation, actual restart and GitHub Actions green status must be verified before calling the release ready.
