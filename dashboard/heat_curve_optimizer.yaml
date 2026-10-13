@@ -12,11 +12,23 @@ views:
             heading: Rekomendacja
             icon: mdi:chart-bell-curve
           - type: tile
+            entity: switch.heat_curve_optimizer_data_collection
+            name: Zbieranie danych
+            icon: mdi:database-clock
+          - type: tile
             entity: sensor.heat_curve_optimizer_recommendation
             name: Zalecenie
           - type: markdown
             content: >-
               {% set s = 'sensor.heat_curve_optimizer_recommendation' %}
+              {% set collection = 'switch.heat_curve_optimizer_data_collection' %}
+              {% if is_state(collection, 'off') %}
+              ## ⏸ Zbieranie danych wstrzymane
+              Ogrzewanie jest wyłączone lub analiza została ręcznie wstrzymana.
+              Próbki nie są zapisywane i pokrycie danych nie rośnie.
+
+              Włącz **Zbieranie danych** dopiero po uruchomieniu ogrzewania.
+              {% else %}
               **Stan:** {{ states(s) }}
 
               **Uzasadnienie:** {{ state_attr(s, 'reason') or 'Brak danych' }}
@@ -25,6 +37,7 @@ views:
               Wstępna korekta: {{ state_attr(s,'recommended_adjustment_c') }} °C.
               {% else %}
               ⚠️ Rekomendacja wstrzymana. Nie zmieniaj nastaw.
+              {% endif %}
               {% endif %}
           - type: entities
             title: Diagnostyka
