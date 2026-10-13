@@ -1,0 +1,68 @@
+title: Heat Curve Optimizer
+views:
+  - title: Ogrzewanie
+    path: ogrzewanie
+    icon: mdi:home-thermometer
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Rekomendacja
+            icon: mdi:chart-bell-curve
+          - type: tile
+            entity: sensor.heat_curve_optimizer_recommendation
+            name: Zalecenie
+          - type: markdown
+            content: >-
+              {% set s = 'sensor.heat_curve_optimizer_recommendation' %}
+              **Stan:** {{ states(s) }}
+
+              **Uzasadnienie:** {{ state_attr(s, 'reason') or 'Brak danych' }}
+
+              {% if states(s) in ['raise','lower','no_change'] %}
+              Wstępna korekta: {{ state_attr(s,'recommended_adjustment_c') }} °C.
+              {% else %}
+              ⚠️ Rekomendacja wstrzymana. Nie zmieniaj nastaw.
+              {% endif %}
+          - type: entities
+            title: Diagnostyka
+            entities:
+              - sensor.heat_curve_optimizer_data_quality
+              - sensor.heat_curve_optimizer_diagnostic_reason
+              - sensor.heat_curve_optimizer_data_coverage
+              - sensor.heat_curve_optimizer_confidence
+      - type: grid
+        cards:
+          - type: heading
+            heading: Pomieszczenia i strefy
+          - type: markdown
+            content: >-
+              {% set z = state_attr('sensor.heat_curve_optimizer_recommendation','zones') or {} %}
+              **Podłogówka:** {{ (z.get('floor') or {}).get('average','—') }} °C
+
+              **Grzejniki:** {{ (z.get('radiator') or {}).get('average','—') }} °C
+
+              Własne czujniki pokojowe dodaj do poniższych kart.
+          - type: entities
+            title: Podłogówka — Aqara / Supla
+            entities: []
+          - type: entities
+            title: Grzejniki — Aqara / Supla
+            entities: []
+      - type: grid
+        cards:
+          - type: heading
+            heading: Trendy i jakość danych
+          - type: history-graph
+            title: Odchylenie temperatury — 24 h
+            hours_to_show: 24
+            entities:
+              - sensor.heat_curve_optimizer_temperature_error
+          - type: history-graph
+            title: Pokrycie i pewność danych — 24 h
+            hours_to_show: 24
+            entities:
+              - sensor.heat_curve_optimizer_data_coverage
+              - sensor.heat_curve_optimizer_confidence
