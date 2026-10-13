@@ -9,7 +9,8 @@ Experimental, **read-only** Home Assistant custom integration for conservative h
 3. Add `https://github.com/kamiljaworski88/Heat-Curve-Optimizer` as **Integration**.
 4. Install the integration, restart Home Assistant and go to Settings → Devices & services → Add integration → Heat Curve Optimizer.
 5. Select outdoor and target temperature entities and at least one floor or radiator room temperature entity.
-6. Allow a full analysis window to accumulate before acting on advice.
+6. Turn on **Data collection** only when the heating system is actually running.
+7. Allow a full analysis window to accumulate before acting on advice.
 
 **Polska instrukcja:** [docs/INSTRUKCJA_PL.md](docs/INSTRUKCJA_PL.md)
 
@@ -25,7 +26,7 @@ The workflow in `.github/workflows/tests.yml` runs `python -m pytest -q tests`, 
 
 No automatic heat-pump control. The current heuristic suggests a preliminary **offset**, not a calibrated slope. Thermostats, floor actuators, air conditioning, occupancy and pump heating mode are not modeled sufficiently for automatic decisions.
 
-Never commit secrets, tokens, real household entity IDs or `.storage` files. Samples are stored locally in Home Assistant. Inspect diagnostics before sharing.
+Never commit secrets, tokens, real household entity IDs or `.storage` files. Samples are stored locally in Home Assistant. Data collection can be paused from the integration switch; while paused, no samples are added and coverage does not increase. Existing valid history is preserved. Upgrading from the pre-switch storage schema discards the old uncontrolled sample history once and starts paused. Inspect diagnostics before sharing.
 
 ## Known limitations
 
