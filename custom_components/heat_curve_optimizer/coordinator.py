@@ -1,6 +1,6 @@
-"""Data collection and persistence for Heat Curve Optimizer."""
+"""Sample collection and conservative local persistence."""
 from __future__ import annotations
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
@@ -16,7 +16,7 @@ class HeatCurveOptimizerCoordinator:
     def __init__(self, hass: HomeAssistant, entry):
         self.hass, self.entry = hass, entry
         self.samples = []
-        self.result = {"status":"collecting","coverage":0.0,"confidence":0.0}
+        self.result = {"status": "collecting", "coverage": 0.0, "confidence": 0.0}
         self.issues = []
         self._listeners = []
         self._unsub = None
@@ -24,11 +24,13 @@ class HeatCurveOptimizerCoordinator:
 
     async def async_initialize(self):
         stored = await self._store.async_load()
-        if isinstance(stored, dict):
-            self.samples = stored.get("samples", [])
+        if isinstance(stored, dict) and isinstance(stored.get("samples"), list):
+            self.samples = [s for s in stored["samples"] if isinstance(s, dict)]
         await self.async_collect()
         interval = self.entry.data.get(CONF_SAMPLE_INTERVAL, DEFAULT_SAMPLE_INTERVAL)
-        self._unsub = async_track_time_interval(self.hass, self._scheduled_collect, timedelta(minutes=interval))
+        self._unsub = async_track_time_interval(
+            self.hass, self._scheduled_collect, timedelta(minutes=interval)
+        )
 
     async def async_shutdown(self):
         if self._unsub:
@@ -52,6 +54,7 @@ class HeatCurveOptimizerCoordinator:
 
     async def async_collect(self):
         data = self.entry.data
+        now = datetime.now(timezone.utc)
         raw = {
             "outdoor": self._state(data.get(CONF_OUTDOOR_TEMP)),
             "target": self._state(data.get(CONF_TARGET_TEMP)),
@@ -60,13 +63,22 @@ class HeatCurveOptimizerCoordinator:
         }
         sample = validate_sample(raw)
         self.issues = sample.pop("errors", [])
-        self.samples.append(sample)
-
+        sample["timestamp"] = now.isoformat()
         interval = data.get(CONF_SAMPLE_INTERVAL, DEFAULT_SAMPLE_INTERVAL)
         hours = data.get(CONF_ANALYSIS_HOURS, DEFAULT_ANALYSIS_HOURS)
         expected = max(1, int(hours * 60 / interval))
-        self.samples = self.samples[-max(expected * 2, 48):]
-        self.result = analyze(self.samples[-expected:], expected)
+        # Time-bound history: restart must not make yesterday's samples look current.
+        cutoff = now - timedelta(hours=hours)
+        retained = []
+        for previous in self.samples:
+            try:
+                timestamp = datetime.fromisoformat(previous["timestamp"])
+                if timestamp.tzinfo is not None and cutoff <= timestamp <= now:
+                    retained.append(previous)
+            except (KeyError, TypeError, ValueError):
+                continue
+        self.samples = (retained + [sample])[-max(expected * 2, 48):]
+        self.result = analyze(self.samples, expected)
         if self.issues:
             self.result["data_quality"] = "error"
             self.result["issues"] = self.issues
@@ -75,7 +87,6 @@ class HeatCurveOptimizerCoordinator:
         else:
             self.result["data_quality"] = "ok"
             self.result["issues"] = []
-
         await self._store.async_save({"samples": self.samples})
         for listener in list(self._listeners):
             listener()
