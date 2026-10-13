@@ -1,7 +1,7 @@
 """Constants for Heat Curve Optimizer."""
 DOMAIN = "heat_curve_optimizer"
 NAME = "Heat Curve Optimizer"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 CONF_OUTDOOR_TEMP = "outdoor_temperature"
 CONF_FLOOR_TEMPS = "floor_heating_temperatures"
