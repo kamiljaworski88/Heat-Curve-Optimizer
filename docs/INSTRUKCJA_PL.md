@@ -47,7 +47,7 @@ Heat Curve Dashboard ma własną nawigację:
 
 - `dashboard/heat_curve_optimizer.yaml` — pełny dashboard Lovelace;
 - `dashboard/heat_curve_optimizer_widget.yaml` — kompaktowy widget;
-- `dashboard/heat_curve_fastmile.yaml` — minimalny przykład dashboard JS.
+- `dashboard/heat_curve_dashboard.yaml` — minimalny przykład dashboard JS.
 
 ## 4. Jak czytać diagnostykę
 
