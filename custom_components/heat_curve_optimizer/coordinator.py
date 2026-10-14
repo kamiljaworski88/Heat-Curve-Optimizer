@@ -11,6 +11,7 @@ from .const import (
     DEFAULT_SAMPLE_INTERVAL, DOMAIN, STORAGE_SCHEMA_VERSION, STORAGE_VERSION,
 )
 from .validation import validate_sample
+from .learning import build_house_profile, estimate_response_hours, evaluate_change, recommendation_snapshot, new_change
 
 class HeatCurveOptimizerCoordinator:
     def __init__(self, hass: HomeAssistant, entry):
@@ -19,6 +20,8 @@ class HeatCurveOptimizerCoordinator:
         self.collection_enabled = False
         self.result = self._paused_result()
         self.issues = []
+        self.recommendation_history = []
+        self.applied_change = None
         self._listeners = []
         self._unsub = None
         self._store = Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}")
@@ -42,6 +45,8 @@ class HeatCurveOptimizerCoordinator:
             if isinstance(stored.get("samples"), list):
                 self.samples = [s for s in stored["samples"] if isinstance(s, dict)]
             self.collection_enabled = bool(stored.get("collection_enabled", False))
+            self.recommendation_history = [x for x in stored.get("recommendation_history", []) if isinstance(x, dict)][-500:]
+            self.applied_change = stored.get("applied_change") if isinstance(stored.get("applied_change"), dict) else None
         else:
             self.samples = []
             self.collection_enabled = False
@@ -68,6 +73,8 @@ class HeatCurveOptimizerCoordinator:
             "schema_version": STORAGE_SCHEMA_VERSION,
             "samples": self.samples,
             "collection_enabled": self.collection_enabled,
+            "recommendation_history": self.recommendation_history[-500:],
+            "applied_change": self.applied_change,
         })
 
     def async_add_listener(self, callback):
@@ -135,6 +142,13 @@ class HeatCurveOptimizerCoordinator:
                 continue
         self.samples = (retained + [sample])[-max(expected * 2, 48):]
         self.result = analyze(self.samples, expected)
+        snapshot = recommendation_snapshot(self.result, now.isoformat())
+        if snapshot:
+            self.recommendation_history.append(snapshot)
+            self.recommendation_history = self.recommendation_history[-500:]
+            self.result["house_profile"] = build_house_profile(self.recommendation_history)
+            self.result["estimated_response_hours"] = estimate_response_hours(self.recommendation_history)
+            self.result["change_evaluation"] = evaluate_change(self.applied_change, self.recommendation_history)
         if self.issues:
             self.result["data_quality"] = "error"
             self.result["issues"] = self.issues
@@ -145,3 +159,12 @@ class HeatCurveOptimizerCoordinator:
             self.result["issues"] = []
         await self._save()
         self._notify_listeners()
+
+    async def async_register_applied_change(self, adjustment: float):
+        """Register a change explicitly confirmed by the user."""
+        if self.result.get("status") != "ready":
+            return False
+        self.applied_change = new_change(adjustment, self.result)
+        await self._save()
+        self._notify_listeners()
+        return True
