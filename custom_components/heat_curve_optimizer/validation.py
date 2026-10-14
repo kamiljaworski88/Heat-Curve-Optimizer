@@ -31,9 +31,9 @@ def validate_sample(raw: dict) -> dict:
         for entity_id,state in raw.get(zone,[]):
             value,e=number(state,entity_id,MIN_INDOOR_C,MAX_INDOOR_C)
             if e: errors.append(e)
-            else: zones[zone].append(value)
+            else:\n                zones[zone].append(value)\n                rooms[zone].append({"entity_id": entity_id, "value": value})
 
     if not zones["floor"] and not zones["radiator"]:
         errors.append("No valid room temperature sensors")
 
-    return {"valid":not errors,"errors":errors,"outdoor":outdoor,"target":target,**zones}
+    supply,e=number(raw.get("supply"),"Supply temperature") if raw.get("supply") is not None else (None,None)\n    if e: errors.append(e)\n    return {"valid":not errors,"errors":errors,"outdoor":outdoor,"target":target,**zones,\n            "rooms":rooms,"supply":supply,"return": number(raw.get("return"),"Return temperature")[0] if raw.get("return") is not None else None,\n            "thermostats": raw.get("thermostats", [])}
