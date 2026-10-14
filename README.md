@@ -52,7 +52,7 @@ No manual resource configuration is required. With YAML-managed Lovelace resourc
 
 ## Dashboard variants
 
-- **Heat Curve Dashboard:** [dashboard/heat_curve_fastmile.yaml](dashboard/heat_curve_fastmile.yaml) — recommended custom JavaScript UI.
+- **Heat Curve Dashboard:** [dashboard/heat_curve_dashboard.yaml](dashboard/heat_curve_dashboard.yaml) — recommended custom JavaScript UI.
 - **Full native Lovelace dashboard:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml).
 - **Compact native widget:** [dashboard/heat_curve_optimizer_widget.yaml](dashboard/heat_curve_optimizer_widget.yaml).
 
@@ -107,7 +107,7 @@ The GitHub Actions workflow runs Python compilation, pytest and manifest checks.
 ## Documentation
 
 - **Polska instrukcja:** [docs/INSTRUKCJA_PL.md](docs/INSTRUKCJA_PL.md)
-- **dashboard card example:** [dashboard/heat_curve_fastmile.yaml](dashboard/heat_curve_fastmile.yaml)
+- **dashboard card example:** [dashboard/heat_curve_dashboard.yaml](dashboard/heat_curve_dashboard.yaml)
 - **Full dashboard:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml)
 - **Compact widget:** [dashboard/heat_curve_optimizer_widget.yaml](dashboard/heat_curve_optimizer_widget.yaml)
 
