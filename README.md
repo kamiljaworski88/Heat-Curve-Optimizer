@@ -1,65 +1,116 @@
 # Heat Curve Optimizer
 
-Experimental, **read-only** Home Assistant custom integration for conservative heating-curve recommendations. Version 0.2 models underfloor heating and radiators as separate observation zones while producing one recommendation for installations where both zones share the same supply temperature.
+**Heat Curve Optimizer** is a Home Assistant custom integration that learns how a house reacts to outdoor temperature and provides conservative, read-only heating-curve advice. It is designed for mixed installations such as **underfloor heating + radiators sharing one supply temperature**.
+
+> The integration is an advisor. It does **not** automatically change heat-pump settings.
+
+## Highlights — v0.9.1
+
+- separate analysis of underfloor-heating and radiator zones with one safe shared-supply decision;
+- per-room diagnostics that can identify an isolated cold/hot room instead of incorrectly changing the whole curve;
+- optional supply/return analysis with ΔT diagnostics;
+- optional thermostat/valve-state gating;
+- learned house profile in outdoor-temperature bands;
+- advisory distinction between likely **curve offset** and **curve slope** problems;
+- explicit **I applied the recommendation** button for evaluating real changes;
+- **FastMile Dashboard v2** — bundled responsive JavaScript card with navigation, gauges and SVG visualization;
+- local data storage and a Data collection switch.
 
 ## Installation through HACS
 
 1. Back up Home Assistant.
-2. Open HACS → Custom repositories.
-3. Add `https://github.com/kamiljaworski88/Heat-Curve-Optimizer` as **Integration**.
-4. Install the integration, restart Home Assistant and go to Settings → Devices & services → Add integration → Heat Curve Optimizer.
-5. Select outdoor and target temperature entities and at least one floor or radiator room temperature entity.
-6. Turn on **Data collection** only when the heating system is actually running.
-7. Allow a full analysis window to accumulate before acting on advice.
+2. Open **HACS → Custom repositories**.
+3. Add the repository as **Integration**:
+   `https://github.com/kamiljaworski88/Heat-Curve-Optimizer`
+4. Install/update **Heat Curve Optimizer**.
+5. Restart Home Assistant.
+6. Go to **Settings → Devices & services → Add integration → Heat Curve Optimizer**.
+7. Select outdoor temperature, target temperature and at least one room-temperature entity.
+8. Optionally configure supply, return and thermostat/valve entities.
+9. Enable **Data collection** when the heating system is operating.
 
-**Polska instrukcja:** [docs/INSTRUKCJA_PL.md](docs/INSTRUKCJA_PL.md)
+### FastMile JavaScript dashboard — no manual file copy
 
-## Dashboard — two variants
+From **v0.9.1**, the FastMile card is bundled inside the integration. The integration exposes the JavaScript file itself and attempts to register it automatically as a Lovelace module. You no longer need to copy the file to `/config/www`.
 
-Choose the variant that fits your Home Assistant setup:
+After installing/updating and restarting Home Assistant, add a **Manual card** to a dashboard:
 
-- **Full dashboard/view:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml) — complete Lovelace dashboard with control, recommendation, diagnostics and history.
-- **Compact widget:** [dashboard/heat_curve_optimizer_widget.yaml](dashboard/heat_curve_optimizer_widget.yaml) — a small `vertical-stack` card that can be pasted into an existing view.
+```yaml
+type: custom:heat-curve-fastmile-card
+applied_button: button.i_applied_the_recommendation
+```
 
-In both variants the whole **Data collection** tile is clickable and toggles the switch. Adjust generated entity IDs if Home Assistant created different IDs.\n\n### Screenshots / previews\n\n**Full dashboard**\n\n![Full dashboard preview](docs/screenshots/full-dashboard-preview.svg)\n\n**Compact widget**\n\n![Compact widget preview](docs/screenshots/compact-widget-preview.svg)\n\n> These are interface previews. Actual values and entity states depend on your Home Assistant installation.
+If Home Assistant uses a different entity ID for the confirmation button, replace `button.i_applied_the_recommendation` with the actual ID from **Developer Tools → States**.
 
-**Beta candidate notes:** [docs/RELEASE_NOTES_0.1.0-beta.md](docs/RELEASE_NOTES_0.1.0-beta.md). This document is not a published GitHub release.
+The bundled resource is served at:
 
-## v0.2 decision model
+```text
+/heat_curve_optimizer/heat-curve-fastmile-card.js
+```
 
-Version 0.2 assumes **one shared supply temperature** for underfloor heating and radiators:
+If your Home Assistant installation uses YAML-managed Lovelace resources, automatic resource registration may not be available. In that case add the URL above as a JavaScript module in your YAML resource configuration.
 
-- both zones are measured separately;
-- a clearly underheated zone has priority when the other zone remains inside the comfort deadband;
-- lowering is allowed only when no zone is underheated;
-- simultaneous material underheating and overheating produces `zone_conflict` instead of averaging the errors;
-- outdoor temperature stability affects whether a recommendation is considered safe;
-- recommendation attributes expose the governing zone, weather context and a human-readable reason.
+## Dashboard variants
 
-This remains advisory only: v0.2 does not automatically change heating settings.
+- **FastMile Dashboard v2:** [dashboard/heat_curve_fastmile.yaml](dashboard/heat_curve_fastmile.yaml) — recommended custom JavaScript UI.
+- **Full native Lovelace dashboard:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml).
+- **Compact native widget:** [dashboard/heat_curve_optimizer_widget.yaml](dashboard/heat_curve_optimizer_widget.yaml).
 
-## v0.3-v0.5 learning roadmap implemented
+### FastMile Dashboard v2
 
-- **v0.3 — history and thermal response:** persists compact recommendation snapshots and estimates observed response time only from comparable outdoor conditions.
-- **v0.4 — house profile:** groups repeated observations into 5 °C outdoor-temperature bands. A band is shown only after at least three observations; it is descriptive, not automatic control.
-- **v0.5 — change evaluation:** supports an explicitly registered applied curve/offset change and evaluates it only after at least 12 hours under comparable outdoor conditions (within 2 °C).
+The JavaScript card provides internal navigation for:
 
-The shared-supply safety model from v0.2 remains authoritative. Learning never overrides `zone_conflict`, insufficient data, or unstable conditions. Automatic control is still intentionally out of scope.
+- **Overview** — system status, recommendation, coverage/confidence and temperature visualization;
+- **Rooms** — room-level diagnostics;
+- **House learning** — learned response time, outdoor-temperature profile and slope/offset conclusion;
+- **Installation** — supply, return and ΔT diagnostics.
+
+It is responsive and intended especially for wall/tablet dashboards while remaining usable on phones.
+
+## Decision and learning model
+
+Heat Curve Optimizer assumes one shared supply temperature for the configured heating zones. It therefore avoids averaging contradictory demands into a misleading recommendation.
+
+A materially underheated zone has priority when the other zone is within its comfort deadband. Lowering is allowed only when no zone is underheated. Simultaneous meaningful underheating and overheating results in a conflict instead of a shared-curve change.
+
+From v0.6 onward, room-level analysis can classify a single room as a local issue and advise checking its valve, thermostat or flow before changing the whole heating curve. Supply/return data can provide observational ΔT diagnostics. Configured thermostat/valve states can block unsafe conclusions when rooms are being throttled.
+
+The learned outdoor-temperature profile is used to distinguish patterns that are more consistent with **offset** or **slope** adjustment. These remain recommendations, not automatic control.
+
+## Data collection and learning
+
+The integration starts with data collection disabled. Enable it when central heating is genuinely operating.
+
+Learning includes:
+
+- compact recommendation history;
+- building response-time estimation;
+- 5 °C outdoor-temperature profile bands;
+- post-change evaluation after an explicitly confirmed change;
+- comparable-weather safeguards.
+
+The **I applied the recommendation** button tells the integration that the current recommendation was actually implemented. It does not modify the heat pump.
 
 ## Tests
 
-The workflow in `.github/workflows/tests.yml` runs `python -m pytest -q tests`, Python compilation and a manifest check. Tests use mock Aqara/Supla states and fake Home Assistant services, not physical devices or a full Home Assistant runtime. Check the actual Actions run result before installing the beta.
+The GitHub Actions workflow runs Python compilation, pytest and manifest checks. Unit tests use mocked Home Assistant/Aqara/Supla-style states rather than physical equipment. A green CI result does not replace testing after restart on a real Home Assistant instance.
 
 ## Safety and privacy
 
-No automatic heat-pump control. The current heuristic suggests a preliminary **offset**, not a calibrated slope. Thermostats, floor actuators, air conditioning, occupancy and pump heating mode are not modeled sufficiently for automatic decisions.
+- no automatic heat-pump control;
+- no cloud service required by this integration;
+- samples are stored locally in Home Assistant;
+- do not publish tokens, household entity IDs or `.storage` contents;
+- hydraulic diagnostics are observational and do not replace commissioning measurements;
+- slope/offset conclusions require sufficient data across different outdoor conditions.
 
-Never commit secrets, tokens, real household entity IDs or `.storage` files. Samples are stored locally in Home Assistant. Data collection can be paused from the integration switch; while paused, no samples are added and coverage does not increase. Existing valid history is preserved. Upgrading from the pre-switch storage schema discards the old uncontrolled sample history once and starts paused. Inspect diagnostics before sharing.
+## Documentation
 
-## Known limitations
+- **Polska instrukcja:** [docs/INSTRUKCJA_PL.md](docs/INSTRUKCJA_PL.md)
+- **FastMile card example:** [dashboard/heat_curve_fastmile.yaml](dashboard/heat_curve_fastmile.yaml)
+- **Full dashboard:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml)
+- **Compact widget:** [dashboard/heat_curve_optimizer_widget.yaml](dashboard/heat_curve_optimizer_widget.yaml)
 
-- Optional supply/return, power and operation-state entities are selectable but not yet used for recommendations.
-- Sensor update age is not yet checked; frozen but numeric states may be misleading.
-- v0.2 evaluates weather stability inside the current analysis window; historical weather-bucket learning is planned for a later version.
-- Room-specific targets and AC/thermostat demand signals are not modeled.
-- HACS installation, actual restart and GitHub Actions green status must be verified before calling the release ready.
+## Current limitations
+
+Sensor update age/frozen-state detection is still limited. House-learning quality depends on having meaningful heating operation across sufficiently different outdoor conditions. Local thermostats, hydraulic balancing and other heat sources can affect observed temperatures, so the integration deliberately blocks or softens advice when configured control-state information indicates that the data may be misleading.
