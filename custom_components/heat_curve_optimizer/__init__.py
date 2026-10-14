@@ -25,11 +25,11 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
         [StaticPathConfig(FRONTEND_URL, str(FRONTEND_FILE), cache_headers=False)]
     )
 
-    resources = hass.data.get("lovelace", {}).get("resources")
-    if resources is not None and hasattr(resources, "async_create_item"):
-        existing = await resources.async_get_info()
-        if not any(item.get("url", "").split("?")[0] == FRONTEND_URL for item in existing):
-            await resources.async_create_item({"res_type": "module", "url": FRONTEND_URL})
+    # Lovelace internals are not a stable public mapping API.  In current
+    # Home Assistant versions hass.data["lovelace"] is a LovelaceData object,
+    # not a dict, so treating it as one prevents the whole integration from
+    # loading.  Serve the bundled card here and let the user register the
+    # resource through the supported Lovelace resource UI/YAML mechanism.
 
     hass.data.setdefault(DOMAIN, {})["_frontend_registered"] = True
 
