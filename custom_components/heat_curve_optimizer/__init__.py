@@ -16,12 +16,12 @@ from .coordinator import HeatCurveOptimizerCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.BUTTON]
-FRONTEND_URL = "/heat_curve_optimizer/heat-curve-fastmile-card.js"
-FRONTEND_FILE = Path(__file__).parent / "frontend" / "heat-curve-fastmile-card.js"
+FRONTEND_URL = "/heat_curve_optimizer/heat-curve-dashboard-card.js"
+FRONTEND_FILE = Path(__file__).parent / "frontend" / "heat-curve-dashboard-card.js"
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:
-    """Expose the bundled FastMile card and register it as a Lovelace module."""
+    """Expose the bundled dashboard card and register it as a Lovelace module."""
     if hass.data.get(DOMAIN, {}).get("_frontend_registered"):
         return
 
@@ -56,11 +56,11 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
         else:
             add_extra_js_url(hass, FRONTEND_URL)
             _LOGGER.info(
-                "FastMile card loaded as frontend module (YAML Lovelace resources)"
+                "dashboard card loaded as frontend module (YAML Lovelace resources)"
             )
     except Exception:
         # Frontend failures must never stop the heating advisor itself.
-        _LOGGER.exception("Could not automatically register FastMile card")
+        _LOGGER.exception("Could not automatically register dashboard card")
 
     hass.data.setdefault(DOMAIN, {})["_frontend_registered"] = True
 
