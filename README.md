@@ -38,6 +38,14 @@ Version 0.2 assumes **one shared supply temperature** for underfloor heating and
 
 This remains advisory only: v0.2 does not automatically change heating settings.
 
+## v0.3-v0.5 learning roadmap implemented
+
+- **v0.3 — history and thermal response:** persists compact recommendation snapshots and estimates observed response time only from comparable outdoor conditions.
+- **v0.4 — house profile:** groups repeated observations into 5 °C outdoor-temperature bands. A band is shown only after at least three observations; it is descriptive, not automatic control.
+- **v0.5 — change evaluation:** supports an explicitly registered applied curve/offset change and evaluates it only after at least 12 hours under comparable outdoor conditions (within 2 °C).
+
+The shared-supply safety model from v0.2 remains authoritative. Learning never overrides `zone_conflict`, insufficient data, or unstable conditions. Automatic control is still intentionally out of scope.
+
 ## Tests
 
 The workflow in `.github/workflows/tests.yml` runs `python -m pytest -q tests`, Python compilation and a manifest check. Tests use mock Aqara/Supla states and fake Home Assistant services, not physical devices or a full Home Assistant runtime. Check the actual Actions run result before installing the beta.
