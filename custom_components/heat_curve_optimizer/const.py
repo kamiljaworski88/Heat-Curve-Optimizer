@@ -1,7 +1,7 @@
 """Constants for Heat Curve Optimizer."""
 DOMAIN = "heat_curve_optimizer"
 NAME = "Heat Curve Optimizer"
-VERSION = "0.2.0"
+VERSION = "0.5.0"
 
 CONF_OUTDOOR_TEMP = "outdoor_temperature"
 CONF_FLOOR_TEMPS = "floor_heating_temperatures"
@@ -23,7 +23,7 @@ DEADBAND = 0.3
 SMALL_ERROR = 0.8
 MAX_ADJUSTMENT = 2.0
 STORAGE_VERSION = 1
-STORAGE_SCHEMA_VERSION = 2
+STORAGE_SCHEMA_VERSION = 3
 
 # Broad physical sanity limits. Values outside them are rejected, never clamped.
 MIN_TEMP_C = -60.0
