@@ -20,6 +20,15 @@ views:
           - type: tile
             entity: sensor.recommendation
             name: Rekomendacja
+          - type: tile
+            entity: button.i_applied_the_recommendation
+            name: Zastosowałem rekomendację
+            icon: mdi:check-circle-outline
+            tap_action:
+              action: perform-action
+              perform_action: button.press
+              target:
+                entity_id: button.i_applied_the_recommendation
           - type: markdown
             content: >-
               {% set sw = states('switch.data_collection') %}
