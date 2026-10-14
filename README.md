@@ -14,7 +14,14 @@ Experimental, **read-only** Home Assistant custom integration for conservative h
 
 **Polska instrukcja:** [docs/INSTRUKCJA_PL.md](docs/INSTRUKCJA_PL.md)
 
-**Dashboard:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml) (Lovelace Sections template; adjust generated entity IDs and room sensors).
+## Dashboard — two variants
+
+Choose the variant that fits your Home Assistant setup:
+
+- **Full dashboard/view:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml) — complete Lovelace dashboard with control, recommendation, diagnostics and history.
+- **Compact widget:** [dashboard/heat_curve_optimizer_widget.yaml](dashboard/heat_curve_optimizer_widget.yaml) — a small `vertical-stack` card that can be pasted into an existing view.
+
+In both variants the whole **Data collection** tile is clickable and toggles the switch. Adjust generated entity IDs if Home Assistant created different IDs.
 
 **Beta candidate notes:** [docs/RELEASE_NOTES_0.1.0-beta.md](docs/RELEASE_NOTES_0.1.0-beta.md). This document is not a published GitHub release.
 
