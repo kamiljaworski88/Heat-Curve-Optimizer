@@ -24,37 +24,39 @@ views:
             content: >-
               {% set sw = states('switch.data_collection') %}
               {% set r = states('sensor.recommendation') %}
+              {% set reason = state_attr('sensor.recommendation','reason') %}
               {% if sw == 'off' %}
               ## ⏸ Zbieranie danych wstrzymane
 
-              Nowe próbki nie są zapisywane. Włącz przełącznik dopiero,
-              gdy ogrzewanie CO rzeczywiście pracuje.
-              {% elif sw in ['unknown', 'unavailable'] %}
-              ## ⚠️ Sprawdź encję przełącznika
-
-              Sprawdź identyfikator w Narzędzia deweloperskie → Stany.
+              Nowe próbki nie są zapisywane. Włącz zbieranie dopiero, gdy CO pracuje.
               {% elif r == 'insufficient_data' %}
               ## ⏳ Zbieranie danych
 
-              Pokrycie: **{{ states('sensor.data_coverage') }}%**.
-              Do bezpiecznej rekomendacji wymagane jest co najmniej 70%.
+              Pokrycie: **{{ states('sensor.data_coverage') }}%**. Do rekomendacji potrzeba minimum 70%.
               {% elif r == 'zone_conflict' %}
               ## ⚠️ Konflikt stref
 
-              Podłogówka i grzejniki mają odmienne potrzeby.
-              Nie zmieniaj nastaw bez sprawdzenia termostatów.
-              {% elif r in ['raise', 'lower', 'no_change'] %}
-              ## {{ {'raise':'⬆️ Podnieś temperaturę',
-                      'lower':'⬇️ Obniż temperaturę',
-                      'no_change':'✅ Bez zmian'}[r] }}
+              Podłogówka i grzejniki mają przeciwne potrzeby. Przy wspólnej temperaturze zasilania **nie zmieniaj krzywej** bez weryfikacji hydrauliki, zaworów i termostatów.
+              {% elif r == 'raise' %}
+              ## ⬆️ Do weryfikacji / możliwe podniesienie
 
-              Wstępna korekta: **{{ state_attr('sensor.recommendation',
-              'recommended_adjustment_c') }} °C**. To sugestia przesunięcia,
-              nie nachylenia krzywej.
+              Sugerowana korekta: **+{{ state_attr('sensor.recommendation','recommended_adjustment_c') }} °C**.
+
+              {{ reason or '' }}
+              {% elif r == 'lower' %}
+              ## ⬇️ Możliwe obniżenie
+
+              Sugerowana korekta: **{{ state_attr('sensor.recommendation','recommended_adjustment_c') }} °C**.
+
+              {{ reason or '' }}
+              {% elif r == 'no_change' %}
+              ## ✅ Bez zmian
+
+              {{ reason or 'Obie strefy pozostają w akceptowalnym zakresie.' }}
               {% else %}
-              ## ⚠️ Brak bezpiecznej rekomendacji
+              ## ℹ️ {{ r }}
 
-              Stan: **{{ r }}**. Sprawdź diagnostykę.
+              {{ reason or 'Sprawdź diagnostykę.' }}
               {% endif %}
           - type: gauge
             entity: sensor.confidence
@@ -66,6 +68,7 @@ views:
             name: Pokrycie danych
             min: 0
             max: 100
+
       - type: grid
         cards:
           - type: heading
@@ -85,43 +88,87 @@ views:
               {% set z = state_attr('sensor.recommendation','zones') or {} %}
               {% set f = z.get('floor') or {} %}
               {% set r = z.get('radiator') or {} %}
-              ### Podłogówka
+              {% set g = state_attr('sensor.recommendation','governing_zone') %}
+              ### 🟦 Podłogówka
+              {% if f %}
+              Średnia: **{{ f.get('average') }} °C** · błąd: **{{ f.get('error') }} °C**
+              {% else %}Brak wystarczających danych.{% endif %}
 
-              {% if f %}Średnia: **{{ f.get('average') }} °C**;
-              odchylenie: **{{ f.get('error') }} °C**.
-              {% else %}Dane strefy będą dostępne po analizie.{% endif %}
+              ### ♨️ Grzejniki
+              {% if r %}
+              Średnia: **{{ r.get('average') }} °C** · błąd: **{{ r.get('error') }} °C**
+              {% else %}Brak wystarczających danych.{% endif %}
 
-              ### Grzejniki
-
-              {% if r %}Średnia: **{{ r.get('average') }} °C**;
-              odchylenie: **{{ r.get('error') }} °C**.
-              {% else %}Dane strefy będą dostępne po analizie.{% endif %}
+              {% if g %}
+              **Strefa decydująca:** {{ 'grzejniki' if g == 'radiator' else 'podłogówka' }}
+              {% endif %}
           - type: markdown
             content: >-
-              {% if is_state('switch.data_collection','off') %}
-              **Tryb:** pauza. Zebrana wcześniej historia pozostaje zapisana.
-              {% elif is_state('sensor.data_quality','ok') %}
-              **Czujniki:** ostatnia próbka przeszła walidację.
+              {% set avg = state_attr('sensor.recommendation','outdoor_average') %}
+              {% set mn = state_attr('sensor.recommendation','outdoor_min') %}
+              {% set mx = state_attr('sensor.recommendation','outdoor_max') %}
+              ### 🌤 Warunki analizy
+              {% if avg is not none %}
+              Średnia zewnętrzna: **{{ avg }} °C**
+
+              Zakres: **{{ mn }}…{{ mx }} °C**
               {% else %}
-              **Uwaga:** sprawdź stan czujników i diagnostykę.
+              Dane pogodowe pojawią się po analizie.
               {% endif %}
+
       - type: grid
         cards:
           - type: heading
-            heading: Historia i trendy
-            icon: mdi:chart-line
+            heading: Nauka budynku — v0.3–v0.5
+            icon: mdi:brain
+          - type: markdown
+            content: >-
+              {% set response = state_attr('sensor.recommendation','estimated_response_hours') %}
+              {% set profile = state_attr('sensor.recommendation','house_profile') or {} %}
+              ### ⏱ Szacowany czas reakcji
+              {% if response is not none %}
+              **{{ response }} h**
+              {% else %}
+              Jeszcze za mało porównywalnych obserwacji.
+              {% endif %}
+
+              ### 🏠 Profil domu
+              {% if profile %}
+              {% for band, p in profile.items() %}
+              **{{ band }}** — obserwacje: {{ p.get('observations') }}, średni błąd: {{ p.get('average_error') }} °C, średnia sugestia: {{ p.get('average_adjustment') }} °C
+              {% endfor %}
+              {% else %}
+              Profil powstanie po co najmniej 3 obserwacjach w danym przedziale temperatury zewnętrznej.
+              {% endif %}
+          - type: markdown
+            content: >-
+              {% set ev = state_attr('sensor.recommendation','change_evaluation') %}
+              ### 🧪 Ocena wykonanej zmiany
+              {% if ev %}
+                {% if ev.get('status') == 'improved' %}
+              ✅ **Zmiana poprawiła pracę układu.**
+
+              Błąd przed: {{ ev.get('before_error') }} °C → po: {{ ev.get('after_error') }} °C.
+                {% elif ev.get('status') == 'worsened' %}
+              ⚠️ **Po zmianie jest gorzej.**
+
+              Błąd przed: {{ ev.get('before_error') }} °C → po: {{ ev.get('after_error') }} °C.
+                {% elif ev.get('status') == 'neutral' %}
+              ➖ **Brak istotnej poprawy ani pogorszenia.**
+                {% else %}
+              ⏳ **Oczekiwanie na porównywalne warunki po zmianie.**
+                {% endif %}
+              {% else %}
+              Brak zarejestrowanej zmiany do oceny.
+              {% endif %}
           - type: history-graph
             title: Odchylenie temperatury — 24 h
             hours_to_show: 24
             entities:
               - entity: sensor.temperature_error
           - type: history-graph
-            title: Pokrycie danych — 24 h
+            title: Pokrycie i pewność — 24 h
             hours_to_show: 24
             entities:
               - entity: sensor.data_coverage
-          - type: history-graph
-            title: Pewność rekomendacji — 24 h
-            hours_to_show: 24
-            entities:
               - entity: sensor.confidence
