@@ -1,6 +1,6 @@
 # Heat Curve Optimizer
 
-Experimental, **read-only** Home Assistant custom integration for conservative heating-curve recommendations. It separates underfloor heating from radiators and avoids recommendations when zones disagree or sensor data is invalid.
+Experimental, **read-only** Home Assistant custom integration for conservative heating-curve recommendations. Version 0.2 models underfloor heating and radiators as separate observation zones while producing one recommendation for installations where both zones share the same supply temperature.
 
 ## Installation through HACS
 
@@ -25,6 +25,19 @@ In both variants the whole **Data collection** tile is clickable and toggles the
 
 **Beta candidate notes:** [docs/RELEASE_NOTES_0.1.0-beta.md](docs/RELEASE_NOTES_0.1.0-beta.md). This document is not a published GitHub release.
 
+## v0.2 decision model
+
+Version 0.2 assumes **one shared supply temperature** for underfloor heating and radiators:
+
+- both zones are measured separately;
+- a clearly underheated zone has priority when the other zone remains inside the comfort deadband;
+- lowering is allowed only when no zone is underheated;
+- simultaneous material underheating and overheating produces `zone_conflict` instead of averaging the errors;
+- outdoor temperature stability affects whether a recommendation is considered safe;
+- recommendation attributes expose the governing zone, weather context and a human-readable reason.
+
+This remains advisory only: v0.2 does not automatically change heating settings.
+
 ## Tests
 
 The workflow in `.github/workflows/tests.yml` runs `python -m pytest -q tests`, Python compilation and a manifest check. Tests use mock Aqara/Supla states and fake Home Assistant services, not physical devices or a full Home Assistant runtime. Check the actual Actions run result before installing the beta.
@@ -39,5 +52,6 @@ Never commit secrets, tokens, real household entity IDs or `.storage` files. Sam
 
 - Optional supply/return, power and operation-state entities are selectable but not yet used for recommendations.
 - Sensor update age is not yet checked; frozen but numeric states may be misleading.
+- v0.2 evaluates weather stability inside the current analysis window; historical weather-bucket learning is planned for a later version.
 - Room-specific targets and AC/thermostat demand signals are not modeled.
 - HACS installation, actual restart and GitHub Actions green status must be verified before calling the release ready.
