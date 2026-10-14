@@ -4,7 +4,7 @@
 
 > The integration is an advisor. It does **not** automatically change heat-pump settings.
 
-## Highlights — v0.9.2
+## Highlights — v0.9.3
 
 - separate analysis of underfloor-heating and radiator zones with one safe shared-supply decision;
 - per-room diagnostics that can identify an isolated cold/hot room instead of incorrectly changing the whole curve;
@@ -31,7 +31,7 @@
 
 ### FastMile JavaScript dashboard — no manual file copy
 
-From **v0.9.2**, the FastMile card is bundled inside the integration. The integration exposes the JavaScript file itself, so you no longer need to copy it to `/config/www`. Register the bundled URL once as a Lovelace JavaScript module.
+From **v0.9.3**, the FastMile card is bundled inside the integration. The integration exposes the JavaScript file itself, so you no longer need to copy it to `/config/www`. The integration registers the bundled URL automatically as a Lovelace module (storage mode) or via the frontend module loader (YAML mode).
 
 After installing/updating and restarting Home Assistant, add a **Manual card** to a dashboard:
 
@@ -48,7 +48,7 @@ The bundled resource is served at:
 /heat_curve_optimizer/heat-curve-fastmile-card.js
 ```
 
-If your Home Assistant installation uses YAML-managed Lovelace resources, automatic resource registration may not be available. In that case add the URL above as a JavaScript module in your YAML resource configuration.
+No manual resource configuration is required. With YAML-managed Lovelace resources the integration uses the Home Assistant frontend module loader; a browser refresh may be needed after an update.
 
 ## Dashboard variants
 
