@@ -4,7 +4,7 @@ from statistics import fmean
 
 DEADBAND = 0.3
 
-def room_diagnostics(samples: list[dict], target: float) -> dict:
+def room_diagnostics(samples: list[dict], target: float, min_observations: int = 1) -> dict:
     """Analyse each room independently and detect isolated outliers."""
     values: dict[str, list[float]] = {}
     zones: dict[str, str] = {}
