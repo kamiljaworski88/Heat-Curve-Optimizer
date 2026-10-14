@@ -4,7 +4,7 @@
 
 > The integration is an advisor. It does **not** automatically change heat-pump settings.
 
-## Highlights — v0.9.2
+## Highlights — v0.9.3
 
 - separate analysis of underfloor-heating and radiator zones with one safe shared-supply decision;
 - per-room diagnostics that can identify an isolated cold/hot room instead of incorrectly changing the whole curve;
@@ -13,7 +13,7 @@
 - learned house profile in outdoor-temperature bands;
 - advisory distinction between likely **curve offset** and **curve slope** problems;
 - explicit **I applied the recommendation** button for evaluating real changes;
-- **FastMile Dashboard v2** — bundled responsive JavaScript card with navigation, gauges and SVG visualization;
+- **Heat Curve Dashboard** — bundled responsive JavaScript card with navigation, gauges and SVG visualization;
 - local data storage and a Data collection switch.
 
 ## Installation through HACS
@@ -29,14 +29,14 @@
 8. Optionally configure supply, return and thermostat/valve entities.
 9. Enable **Data collection** when the heating system is operating.
 
-### FastMile JavaScript dashboard — no manual file copy
+### JavaScript dashboard — no manual file copy
 
-From **v0.9.2**, the FastMile card is bundled inside the integration. The integration exposes the JavaScript file itself, so you no longer need to copy it to `/config/www`. Register the bundled URL once as a Lovelace JavaScript module.
+From **v0.9.3**, the dashboard card is bundled inside the integration. The integration exposes the JavaScript file itself, so you no longer need to copy it to `/config/www`. The integration registers the bundled URL automatically as a Lovelace module (storage mode) or via the frontend module loader (YAML mode).
 
 After installing/updating and restarting Home Assistant, add a **Manual card** to a dashboard:
 
 ```yaml
-type: custom:heat-curve-fastmile-card
+type: custom:heat-curve-dashboard-card
 applied_button: button.i_applied_the_recommendation
 ```
 
@@ -45,18 +45,18 @@ If Home Assistant uses a different entity ID for the confirmation button, replac
 The bundled resource is served at:
 
 ```text
-/heat_curve_optimizer/heat-curve-fastmile-card.js
+/heat_curve_optimizer/heat-curve-dashboard-card.js
 ```
 
-If your Home Assistant installation uses YAML-managed Lovelace resources, automatic resource registration may not be available. In that case add the URL above as a JavaScript module in your YAML resource configuration.
+No manual resource configuration is required. With YAML-managed Lovelace resources the integration uses the Home Assistant frontend module loader; a browser refresh may be needed after an update.
 
 ## Dashboard variants
 
-- **FastMile Dashboard v2:** [dashboard/heat_curve_fastmile.yaml](dashboard/heat_curve_fastmile.yaml) — recommended custom JavaScript UI.
+- **Heat Curve Dashboard:** [dashboard/heat_curve_dashboard.yaml](dashboard/heat_curve_dashboard.yaml) — recommended custom JavaScript UI.
 - **Full native Lovelace dashboard:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml).
 - **Compact native widget:** [dashboard/heat_curve_optimizer_widget.yaml](dashboard/heat_curve_optimizer_widget.yaml).
 
-### FastMile Dashboard v2
+### Heat Curve Dashboard
 
 The JavaScript card provides internal navigation for:
 
@@ -107,7 +107,7 @@ The GitHub Actions workflow runs Python compilation, pytest and manifest checks.
 ## Documentation
 
 - **Polska instrukcja:** [docs/INSTRUKCJA_PL.md](docs/INSTRUKCJA_PL.md)
-- **FastMile card example:** [dashboard/heat_curve_fastmile.yaml](dashboard/heat_curve_fastmile.yaml)
+- **dashboard card example:** [dashboard/heat_curve_dashboard.yaml](dashboard/heat_curve_dashboard.yaml)
 - **Full dashboard:** [dashboard/heat_curve_optimizer.yaml](dashboard/heat_curve_optimizer.yaml)
 - **Compact widget:** [dashboard/heat_curve_optimizer_widget.yaml](dashboard/heat_curve_optimizer_widget.yaml)
 

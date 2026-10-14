@@ -1,4 +1,4 @@
-# Heat Curve Optimizer — instrukcja PL (v0.9.2)
+# Heat Curve Optimizer — instrukcja PL (v0.9.3)
 
 ## 1. Instalacja / aktualizacja przez HACS
 
@@ -13,14 +13,14 @@
 8. Opcjonalnie dodaj temperaturę zasilania, powrotu oraz encje termostatów/zaworów.
 9. Włącz **Data collection / Zbieranie danych**, gdy CO rzeczywiście pracuje.
 
-## 2. FastMile Dashboard v2 — zalecany wygląd
+## 2. Heat Curve Dashboard — zalecany wygląd
 
-Od v0.9.2 karta JavaScript jest dostarczana razem z integracją HACS. **Nie trzeba kopiować pliku JS do /config/www.**
+Od v0.9.3 karta JavaScript jest dostarczana razem z integracją HACS. **Nie trzeba kopiować pliku JS do /config/www.**
 
 Po restarcie Home Assistant dodaj na dashboardzie kartę **Ręcznie** i wklej:
 
 ```yaml
-type: custom:heat-curve-fastmile-card
+type: custom:heat-curve-dashboard-card
 applied_button: button.i_applied_the_recommendation
 ```
 
@@ -29,14 +29,14 @@ Jeżeli przycisk otrzymał inny identyfikator, sprawdź go w **Narzędzia dewelo
 Karta JS jest udostępniana przez integrację pod adresem:
 
 ```text
-/heat_curve_optimizer/heat-curve-fastmile-card.js
+/heat_curve_optimizer/heat-curve-dashboard-card.js
 ```
 
-Dodaj ten adres jeden raz jako zasób Lovelace typu **JavaScript Module** w Ustawienia → Pulpity → Zasoby. Jeśli zasobami zarządzasz przez YAML, dodaj go do sekcji `resources`.
+**Nie dodawaj zasobów ręcznie.** Integracja rejestruje moduł automatycznie w trybie Lovelace Storage. W trybie YAML korzysta z mechanizmu modułów frontend Home Assistant. Po aktualizacji wykonaj restart HA i odśwież przeglądarkę.
 
 ### Widoki karty
 
-FastMile Dashboard v2 ma własną nawigację:
+Heat Curve Dashboard ma własną nawigację:
 
 - **Przegląd** — status, rekomendacja, pokrycie/pewność i wizualizacja temperatur;
 - **Pomieszczenia** — analiza poszczególnych pomieszczeń;
@@ -47,7 +47,7 @@ FastMile Dashboard v2 ma własną nawigację:
 
 - `dashboard/heat_curve_optimizer.yaml` — pełny dashboard Lovelace;
 - `dashboard/heat_curve_optimizer_widget.yaml` — kompaktowy widget;
-- `dashboard/heat_curve_fastmile.yaml` — minimalny przykład FastMile JS.
+- `dashboard/heat_curve_dashboard.yaml` — minimalny przykład dashboard JS.
 
 ## 4. Jak czytać diagnostykę
 
