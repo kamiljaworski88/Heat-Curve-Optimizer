@@ -42,7 +42,10 @@ class HeatCurveOptimizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             vol.Optional(CONF_SUPPLY_TEMP): TEMP_SELECTOR,
             vol.Optional(CONF_RETURN_TEMP): TEMP_SELECTOR,
-            vol.Optional(CONF_POWER): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),\n            vol.Optional(CONF_THERMOSTATS, default=[]): selector.EntitySelector(\n                selector.EntitySelectorConfig(domain=["climate", "binary_sensor", "switch", "sensor"], multiple=True)\n            ),
+            vol.Optional(CONF_POWER): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+            vol.Optional(CONF_THERMOSTATS, default=[]): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain=["climate", "binary_sensor", "switch", "sensor"], multiple=True)
+            ),
             vol.Optional(CONF_OPERATION_STATE): selector.EntitySelector(selector.EntitySelectorConfig()),
             vol.Optional(CONF_HEATING_STATES, default="heating,heat,on"): str,
             vol.Optional(CONF_SAMPLE_INTERVAL, default=DEFAULT_SAMPLE_INTERVAL):
