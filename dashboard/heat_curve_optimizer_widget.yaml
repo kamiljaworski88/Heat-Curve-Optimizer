@@ -10,31 +10,29 @@ cards:
     content: >-
       {% set sw = states('switch.data_collection') %}
       {% set r = states('sensor.recommendation') %}
+      {% set reason = state_attr('sensor.recommendation','reason') %}
       {% if sw == 'off' %}
-      ## ⏸ Zbieranie danych wstrzymane
-      Nowe próbki nie są zapisywane. Włącz zbieranie dopiero,
-      gdy ogrzewanie CO rzeczywiście pracuje.
-      {% elif sw in ['unknown', 'unavailable'] %}
-      ## ⚠️ Brak przełącznika
-      Sprawdź identyfikator encji zbierania danych.
+      ## ⏸ Zbieranie wstrzymane
       {% elif r == 'insufficient_data' %}
       ## ⏳ Zbieranie danych
       Pokrycie: **{{ states('sensor.data_coverage') }}%**
       {% elif r == 'zone_conflict' %}
       ## ⚠️ Konflikt stref
-      Podłogówka i grzejniki wskazują różne potrzeby.
+      Przy wspólnym zasilaniu nie zmieniaj krzywej bez weryfikacji.
       {% elif r == 'raise' %}
-      ## ⬆️ Podnieś temperaturę
-      Korekta: **{{ state_attr('sensor.recommendation','recommended_adjustment_c') }} °C**
+      ## ⬆️ Do weryfikacji / możliwe podniesienie
+      Sugestia: **+{{ state_attr('sensor.recommendation','recommended_adjustment_c') }} °C**
       {% elif r == 'lower' %}
-      ## ⬇️ Obniż temperaturę
-      Korekta: **{{ state_attr('sensor.recommendation','recommended_adjustment_c') }} °C**
+      ## ⬇️ Możliwe obniżenie
+      Sugestia: **{{ state_attr('sensor.recommendation','recommended_adjustment_c') }} °C**
       {% elif r == 'no_change' %}
       ## ✅ Bez zmian
-      Aktualne ustawienie wygląda prawidłowo.
       {% else %}
-      ## ℹ️ Stan analizy
-      **{{ r }}**
+      ## ℹ️ {{ r }}
+      {% endif %}
+      {% if reason %}
+
+      {{ reason }}
       {% endif %}
   - type: horizontal-stack
     cards:
@@ -48,3 +46,18 @@ cards:
         name: Pewność
         min: 0
         max: 100
+  - type: markdown
+    content: >-
+      {% set response = state_attr('sensor.recommendation','estimated_response_hours') %}
+      {% set profile = state_attr('sensor.recommendation','house_profile') or {} %}
+      {% set ev = state_attr('sensor.recommendation','change_evaluation') %}
+      ### 🧠 Nauka budynku
+      Czas reakcji: **{{ response ~ ' h' if response is not none else 'uczę się' }}**
+
+      Profil temperaturowy: **{{ profile | count }} przedziałów**
+
+      {% if ev %}
+      Ostatnia ocena zmiany: **{{ ev.get('status') }}**
+      {% else %}
+      Ocena zmiany: **brak danych**
+      {% endif %}
