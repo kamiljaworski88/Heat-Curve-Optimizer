@@ -146,9 +146,11 @@ class HeatCurveOptimizerCoordinator:
         if snapshot:
             self.recommendation_history.append(snapshot)
             self.recommendation_history = self.recommendation_history[-500:]
-            self.result["house_profile"] = build_house_profile(self.recommendation_history)
-            self.result["estimated_response_hours"] = estimate_response_hours(self.recommendation_history)
-            self.result["change_evaluation"] = evaluate_change(self.applied_change, self.recommendation_history)\n            self.result["curve_shape_advice"] = curve_shape_advice(self.result["house_profile"])
+        # Keep learned context visible even if current advice is blocked.
+        self.result["house_profile"] = build_house_profile(self.recommendation_history)
+        self.result["estimated_response_hours"] = estimate_response_hours(self.recommendation_history)
+        self.result["change_evaluation"] = evaluate_change(self.applied_change, self.recommendation_history)
+        self.result["curve_shape_advice"] = curve_shape_advice(self.result["house_profile"])
         if self.issues:
             self.result["data_quality"] = "error"
             self.result["issues"] = self.issues
