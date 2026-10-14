@@ -1,4 +1,4 @@
-# Heat Curve Optimizer — instrukcja PL (v0.9.2)
+# Heat Curve Optimizer — instrukcja PL (v0.9.3)
 
 ## 1. Instalacja / aktualizacja przez HACS
 
@@ -15,7 +15,7 @@
 
 ## 2. FastMile Dashboard v2 — zalecany wygląd
 
-Od v0.9.2 karta JavaScript jest dostarczana razem z integracją HACS. **Nie trzeba kopiować pliku JS do /config/www.**
+Od v0.9.3 karta JavaScript jest dostarczana razem z integracją HACS. **Nie trzeba kopiować pliku JS do /config/www.**
 
 Po restarcie Home Assistant dodaj na dashboardzie kartę **Ręcznie** i wklej:
 
@@ -32,7 +32,7 @@ Karta JS jest udostępniana przez integrację pod adresem:
 /heat_curve_optimizer/heat-curve-fastmile-card.js
 ```
 
-Dodaj ten adres jeden raz jako zasób Lovelace typu **JavaScript Module** w Ustawienia → Pulpity → Zasoby. Jeśli zasobami zarządzasz przez YAML, dodaj go do sekcji `resources`.
+**Nie dodawaj zasobów ręcznie.** Integracja rejestruje moduł automatycznie w trybie Lovelace Storage. W trybie YAML korzysta z mechanizmu modułów frontend Home Assistant. Po aktualizacji wykonaj restart HA i odśwież przeglądarkę.
 
 ### Widoki karty
 
