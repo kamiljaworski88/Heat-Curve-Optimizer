@@ -1,10 +1,12 @@
 {
   "domain": "heat_curve_optimizer",
   "name": "Heat Curve Optimizer",
-  "codeowners": ["@kamiljaworski88"],
+  "codeowners": [
+    "@kamiljaworski88"
+  ],
   "config_flow": true,
   "documentation": "https://github.com/kamiljaworski88/Heat-Curve-Optimizer",
   "issue_tracker": "https://github.com/kamiljaworski88/Heat-Curve-Optimizer/issues",
   "iot_class": "local_polling",
-  "version": "0.5.0"
+  "version": "0.5.1"
 }
