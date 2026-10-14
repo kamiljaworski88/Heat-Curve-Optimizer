@@ -1,0 +1,50 @@
+type: vertical-stack
+cards:
+  - type: tile
+    entity: switch.data_collection
+    name: Zbieranie danych
+    icon: mdi:database-clock
+    tap_action:
+      action: toggle
+  - type: markdown
+    content: >-
+      {% set sw = states('switch.data_collection') %}
+      {% set r = states('sensor.recommendation') %}
+      {% if sw == 'off' %}
+      ## ⏸ Zbieranie danych wstrzymane
+      Nowe próbki nie są zapisywane. Włącz zbieranie dopiero,
+      gdy ogrzewanie CO rzeczywiście pracuje.
+      {% elif sw in ['unknown', 'unavailable'] %}
+      ## ⚠️ Brak przełącznika
+      Sprawdź identyfikator encji zbierania danych.
+      {% elif r == 'insufficient_data' %}
+      ## ⏳ Zbieranie danych
+      Pokrycie: **{{ states('sensor.data_coverage') }}%**
+      {% elif r == 'zone_conflict' %}
+      ## ⚠️ Konflikt stref
+      Podłogówka i grzejniki wskazują różne potrzeby.
+      {% elif r == 'raise' %}
+      ## ⬆️ Podnieś temperaturę
+      Korekta: **{{ state_attr('sensor.recommendation','recommended_adjustment_c') }} °C**
+      {% elif r == 'lower' %}
+      ## ⬇️ Obniż temperaturę
+      Korekta: **{{ state_attr('sensor.recommendation','recommended_adjustment_c') }} °C**
+      {% elif r == 'no_change' %}
+      ## ✅ Bez zmian
+      Aktualne ustawienie wygląda prawidłowo.
+      {% else %}
+      ## ℹ️ Stan analizy
+      **{{ r }}**
+      {% endif %}
+  - type: horizontal-stack
+    cards:
+      - type: gauge
+        entity: sensor.data_coverage
+        name: Pokrycie
+        min: 0
+        max: 100
+      - type: gauge
+        entity: sensor.confidence
+        name: Pewność
+        min: 0
+        max: 100
