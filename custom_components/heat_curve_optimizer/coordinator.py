@@ -11,7 +11,8 @@ from .const import (
     DEFAULT_SAMPLE_INTERVAL, DOMAIN, STORAGE_SCHEMA_VERSION, STORAGE_VERSION,
 )
 from .validation import validate_sample
-from .learning import build_house_profile, estimate_response_hours, evaluate_change, recommendation_snapshot, new_change\nfrom .advanced import room_diagnostics, hydraulic_diagnostics, thermostat_diagnostics, curve_shape_advice
+from .learning import build_house_profile, estimate_response_hours, evaluate_change, recommendation_snapshot, new_change
+from .advanced import room_diagnostics, hydraulic_diagnostics, thermostat_diagnostics, curve_shape_advice
 
 class HeatCurveOptimizerCoordinator:
     def __init__(self, hass: HomeAssistant, entry):
@@ -123,7 +124,10 @@ class HeatCurveOptimizerCoordinator:
             "outdoor": self._state(data.get(CONF_OUTDOOR_TEMP)),
             "target": self._state(data.get(CONF_TARGET_TEMP)),
             "floor": [(e, self._state(e)) for e in data.get(CONF_FLOOR_TEMPS, [])],
-            "radiator": [(e, self._state(e)) for e in data.get(CONF_RADIATOR_TEMPS, [])],\n            "supply": self._state(data.get(CONF_SUPPLY_TEMP)),\n            "return": self._state(data.get(CONF_RETURN_TEMP)),\n            "thermostats": [self._state(e) for e in data.get(CONF_THERMOSTATS, [])],
+            "radiator": [(e, self._state(e)) for e in data.get(CONF_RADIATOR_TEMPS, [])],
+            "supply": self._state(data.get(CONF_SUPPLY_TEMP)),
+            "return": self._state(data.get(CONF_RETURN_TEMP)),
+            "thermostats": [self._state(e) for e in data.get(CONF_THERMOSTATS, [])],
         }
         sample = validate_sample(raw)
         self.issues = sample.pop("errors", [])
