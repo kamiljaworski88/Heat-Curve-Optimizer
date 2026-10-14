@@ -70,3 +70,16 @@ cards:
       {% else %}
       Ocena zmiany: **brak danych**
       {% endif %}
+
+  - type: markdown
+    content: >-
+      {% set room = state_attr('sensor.recommendation','room_diagnostics') or {} %}
+      {% set hyd = state_attr('sensor.recommendation','hydraulic_diagnostics') or {} %}
+      {% set curve = state_attr('sensor.recommendation','curve_shape_advice') or {} %}
+      ### 🔎 Doradca v0.9
+      {% if room.get('local_issue') %}
+      ⚠️ Problem lokalny: **{{ room.get('local_issue').get('entity_id') }}**
+      {% endif %}
+      ΔT: **{{ hyd.get('delta_t_average','—') }} °C**
+
+      Krzywa: **{{ curve.get('recommendation','wait') }}**

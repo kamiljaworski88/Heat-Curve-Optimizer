@@ -128,8 +128,29 @@ views:
       - type: grid
         cards:
           - type: heading
-            heading: Nauka budynku — v0.3–v0.5
+            heading: Zaawansowany doradca — v0.6–v0.9
             icon: mdi:brain
+          - type: markdown
+            content: >-
+              {% set room = state_attr('sensor.recommendation','room_diagnostics') or {} %}
+              {% set hyd = state_attr('sensor.recommendation','hydraulic_diagnostics') or {} %}
+              {% set ctl = state_attr('sensor.recommendation','thermostat_diagnostics') or {} %}
+              {% set curve = state_attr('sensor.recommendation','curve_shape_advice') or {} %}
+              ### 🏠 Pomieszczenia
+              {% if room.get('local_issue') %}
+              ⚠️ Problem lokalny: **{{ room.get('local_issue').get('entity_id') }}** — najpierw sprawdź przepływ/zawór/termostat.
+              {% else %}
+              Brak wykrytego pojedynczego pomieszczenia zaburzającego wspólną krzywą.
+              {% endif %}
+
+              ### 💧 Hydraulika
+              ΔT zasilanie–powrót: **{{ hyd.get('delta_t_average','brak danych') }} °C** · status: **{{ hyd.get('status','brak danych') }}**
+
+              ### 🌡 Sterowanie pokojowe
+              **{{ ctl.get('status','brak danych') }}**
+
+              ### 📈 Krzywa grzewcza
+              Wniosek: **{{ curve.get('recommendation','wait') }}**
           - type: markdown
             content: >-
               {% set response = state_attr('sensor.recommendation','estimated_response_hours') %}

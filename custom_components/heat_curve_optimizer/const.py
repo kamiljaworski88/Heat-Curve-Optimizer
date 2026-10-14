@@ -1,7 +1,7 @@
 """Constants for Heat Curve Optimizer."""
 DOMAIN = "heat_curve_optimizer"
 NAME = "Heat Curve Optimizer"
-VERSION = "0.5.1"
+VERSION = "0.9.0"
 
 CONF_OUTDOOR_TEMP = "outdoor_temperature"
 CONF_FLOOR_TEMPS = "floor_heating_temperatures"
@@ -12,6 +12,7 @@ CONF_RETURN_TEMP = "return_temperature"
 CONF_POWER = "power"
 CONF_OPERATION_STATE = "operation_state"
 CONF_HEATING_STATES = "heating_states"
+CONF_THERMOSTATS = "thermostat_entities"
 CONF_SAMPLE_INTERVAL = "sample_interval_minutes"
 CONF_ANALYSIS_HOURS = "analysis_hours"
 

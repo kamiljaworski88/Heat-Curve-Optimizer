@@ -7,11 +7,12 @@ from homeassistant.helpers.storage import Store
 from .algorithm import analyze
 from .const import (
     CONF_ANALYSIS_HOURS, CONF_FLOOR_TEMPS, CONF_OUTDOOR_TEMP, CONF_RADIATOR_TEMPS,
-    CONF_SAMPLE_INTERVAL, CONF_TARGET_TEMP, DEFAULT_ANALYSIS_HOURS,
+    CONF_SAMPLE_INTERVAL, CONF_TARGET_TEMP, CONF_SUPPLY_TEMP, CONF_RETURN_TEMP, CONF_THERMOSTATS, DEFAULT_ANALYSIS_HOURS,
     DEFAULT_SAMPLE_INTERVAL, DOMAIN, STORAGE_SCHEMA_VERSION, STORAGE_VERSION,
 )
 from .validation import validate_sample
 from .learning import build_house_profile, estimate_response_hours, evaluate_change, recommendation_snapshot, new_change
+from .advanced import room_diagnostics, hydraulic_diagnostics, thermostat_diagnostics, curve_shape_advice
 
 class HeatCurveOptimizerCoordinator:
     def __init__(self, hass: HomeAssistant, entry):
@@ -124,6 +125,9 @@ class HeatCurveOptimizerCoordinator:
             "target": self._state(data.get(CONF_TARGET_TEMP)),
             "floor": [(e, self._state(e)) for e in data.get(CONF_FLOOR_TEMPS, [])],
             "radiator": [(e, self._state(e)) for e in data.get(CONF_RADIATOR_TEMPS, [])],
+            "supply": self._state(data.get(CONF_SUPPLY_TEMP)),
+            "return": self._state(data.get(CONF_RETURN_TEMP)),
+            "thermostats": [self._state(e) for e in data.get(CONF_THERMOSTATS, [])],
         }
         sample = validate_sample(raw)
         self.issues = sample.pop("errors", [])
@@ -142,13 +146,42 @@ class HeatCurveOptimizerCoordinator:
                 continue
         self.samples = (retained + [sample])[-max(expected * 2, 48):]
         self.result = analyze(self.samples, expected)
+        valid_samples = [s for s in self.samples if s.get("valid")]
+        if valid_samples and self.result.get("target_average") is not None:
+            room_info = room_diagnostics(
+                valid_samples,
+                float(self.result["target_average"]),
+                max(1, int(expected * 0.70)),
+            )
+            hydraulic = hydraulic_diagnostics(valid_samples)
+            controls = thermostat_diagnostics(valid_samples)
+            self.result["room_diagnostics"] = room_info
+            self.result["hydraulic_diagnostics"] = hydraulic
+            self.result["thermostat_diagnostics"] = controls
+            if self.result.get("status") == "ready" and room_info.get("local_issue"):
+                issue = room_info["local_issue"]
+                self.result["status"] = "local_room_issue"
+                self.result["reason"] = (
+                    f"Isolated room issue detected in {issue['entity_id']}. "
+                    "Verify local flow, valve and thermostat before changing the shared curve."
+                )
+                self.result.pop("adjustment", None)
+            elif self.result.get("status") == "ready" and controls.get("blocking"):
+                self.result["status"] = "controls_blocking"
+                self.result["reason"] = (
+                    "Most configured thermostat/valve controls are inactive. "
+                    "Do not tune the shared heating curve from throttled-room data."
+                )
+                self.result.pop("adjustment", None)
         snapshot = recommendation_snapshot(self.result, now.isoformat())
         if snapshot:
             self.recommendation_history.append(snapshot)
             self.recommendation_history = self.recommendation_history[-500:]
-            self.result["house_profile"] = build_house_profile(self.recommendation_history)
-            self.result["estimated_response_hours"] = estimate_response_hours(self.recommendation_history)
-            self.result["change_evaluation"] = evaluate_change(self.applied_change, self.recommendation_history)
+        # Keep learned context visible even if current advice is blocked.
+        self.result["house_profile"] = build_house_profile(self.recommendation_history)
+        self.result["estimated_response_hours"] = estimate_response_hours(self.recommendation_history)
+        self.result["change_evaluation"] = evaluate_change(self.applied_change, self.recommendation_history)
+        self.result["curve_shape_advice"] = curve_shape_advice(self.result["house_profile"])
         if self.issues:
             self.result["data_quality"] = "error"
             self.result["issues"] = self.issues

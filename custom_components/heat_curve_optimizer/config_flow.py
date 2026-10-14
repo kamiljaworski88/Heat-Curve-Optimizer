@@ -7,7 +7,7 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_ANALYSIS_HOURS, CONF_FLOOR_TEMPS, CONF_HEATING_STATES,
     CONF_OPERATION_STATE, CONF_OUTDOOR_TEMP, CONF_POWER, CONF_RADIATOR_TEMPS,
-    CONF_RETURN_TEMP, CONF_SAMPLE_INTERVAL, CONF_SUPPLY_TEMP, CONF_TARGET_TEMP,
+    CONF_RETURN_TEMP, CONF_SAMPLE_INTERVAL, CONF_SUPPLY_TEMP, CONF_TARGET_TEMP, CONF_THERMOSTATS,
     DEFAULT_ANALYSIS_HOURS, DEFAULT_SAMPLE_INTERVAL, DOMAIN, NAME,
 )
 
@@ -43,6 +43,9 @@ class HeatCurveOptimizerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_SUPPLY_TEMP): TEMP_SELECTOR,
             vol.Optional(CONF_RETURN_TEMP): TEMP_SELECTOR,
             vol.Optional(CONF_POWER): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+            vol.Optional(CONF_THERMOSTATS, default=[]): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain=["climate", "binary_sensor", "switch", "sensor"], multiple=True)
+            ),
             vol.Optional(CONF_OPERATION_STATE): selector.EntitySelector(selector.EntitySelectorConfig()),
             vol.Optional(CONF_HEATING_STATES, default="heating,heat,on"): str,
             vol.Optional(CONF_SAMPLE_INTERVAL, default=DEFAULT_SAMPLE_INTERVAL):
