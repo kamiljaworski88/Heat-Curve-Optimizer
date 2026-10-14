@@ -15,6 +15,8 @@ views:
             entity: switch.data_collection
             name: Zbieranie danych
             icon: mdi:database-clock
+            tap_action:
+              action: toggle
           - type: tile
             entity: sensor.recommendation
             name: Rekomendacja
@@ -94,9 +96,6 @@ views:
               {% if r %}Średnia: **{{ r.get('average') }} °C**;
               odchylenie: **{{ r.get('error') }} °C**.
               {% else %}Dane strefy będą dostępne po analizie.{% endif %}
-
-              Czujniki poszczególnych pomieszczeń można dodać jako
-              osobne karty w edytorze dashboardu.
           - type: markdown
             content: >-
               {% if is_state('switch.data_collection','off') %}
