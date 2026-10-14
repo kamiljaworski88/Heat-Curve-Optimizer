@@ -26,20 +26,29 @@ def validate_sample(raw: dict) -> dict:
     if e: errors.append(e)
 
     zones={}
+    rooms={}
     for zone in ("floor","radiator"):
         zones[zone]=[]
+        rooms[zone]=[]
         for entity_id,state in raw.get(zone,[]):
             value,e=number(state,entity_id,MIN_INDOOR_C,MAX_INDOOR_C)
             if e: errors.append(e)
             else:
                 zones[zone].append(value)
-                rooms[zone].append({"entity_id": entity_id, "value": value})
+                rooms[zone].append({"entity_id":entity_id,"value":value})
 
     if not zones["floor"] and not zones["radiator"]:
         errors.append("No valid room temperature sensors")
 
-    supply,e=number(raw.get("supply"),"Supply temperature") if raw.get("supply") is not None else (None,None)
-    if e: errors.append(e)
+    supply=None
+    if raw.get("supply") is not None:
+        supply,e=number(raw.get("supply"),"Supply temperature")
+        if e: errors.append(e)
+    return_temp=None
+    if raw.get("return") is not None:
+        return_temp,e=number(raw.get("return"),"Return temperature")
+        if e: errors.append(e)
+
     return {"valid":not errors,"errors":errors,"outdoor":outdoor,"target":target,**zones,
-            "rooms":rooms,"supply":supply,"return": number(raw.get("return"),"Return temperature")[0] if raw.get("return") is not None else None,
-            "thermostats": raw.get("thermostats", [])}
+            "rooms":rooms,"supply":supply,"return":return_temp,
+            "thermostats":raw.get("thermostats",[])}
